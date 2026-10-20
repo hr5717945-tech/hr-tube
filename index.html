@@ -11,7 +11,6 @@
 *{box-sizing:border-box}
 body{margin:0;background:#101010;color:#fff;font-family:Arial,sans-serif}
 header{padding:16px;background:#181818;position:sticky;top:0;z-index:5;border-bottom:1px solid #333}
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .brand{font-size:27px;font-weight:bold;color:#ff3030}
 .brand span{color:white}
 .search{display:flex;gap:8px;margin-top:15px}
@@ -36,18 +35,12 @@ footer{text-align:center;padding:25px;color:#888}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="top">
-    <div class="brand">▶ <span>HR</span> Tube</div>
-  </div>
-
+  <div class="brand">▶ <span>HR</span> Tube</div>
   <div class="search">
-    <input id="query" type="search" placeholder="Search YouTube videos..."
-      aria-label="Search YouTube videos">
+    <input id="query" type="search" placeholder="Search YouTube videos..." aria-label="Search videos">
     <button id="searchBtn">Search</button>
   </div>
-
   <div id="signin"></div>
   <p id="user"></p>
 </header>
@@ -64,11 +57,10 @@ footer{text-align:center;padding:25px;color:#888}
 
 <p id="status">Loading videos...</p>
 <main id="videos"></main>
-
 <footer>HR Tube © 2026 — Discover videos you love.</footer>
 
 <script>
-/* PASTE YOUR EXISTING YOUTUBE API KEY BETWEEN THE QUOTES */
+/* Add your YouTube API key between these quotes */
 const YOUTUBE_API_KEY = "PASTE_YOUR_API_KEY_HERE";
 
 const GOOGLE_CLIENT_ID =
@@ -86,30 +78,25 @@ const statusEl = document.getElementById("status");
 const queryEl = document.getElementById("query");
 const playerWrap = document.getElementById("playerWrap");
 const player = document.getElementById("player");
-
-let activeCategory = "For You";
 let requestNumber = 0;
 
 categories.forEach(category => {
   const button = document.createElement("button");
   button.textContent = category;
-  button.className = category === activeCategory ? "active" : "";
-
+  button.className = category === "For You" ? "active" : "";
   button.addEventListener("click", () => {
-    activeCategory = category;
     categoryBar.querySelectorAll("button").forEach(b =>
       b.classList.toggle("active", b === button)
     );
     queryEl.value = "";
     searchVideos(category === "For You" ? "popular videos" : category);
   });
-
   categoryBar.appendChild(button);
 });
 
-function openVideo(videoId, title) {
+function openVideo(id, title) {
   player.src = "https://www.youtube-nocookie.com/embed/" +
-    encodeURIComponent(videoId) + "?autoplay=1";
+    encodeURIComponent(id) + "?autoplay=1";
   document.getElementById("playingTitle").textContent = title;
   playerWrap.style.display = "block";
   playerWrap.scrollIntoView({behavior:"smooth",block:"start"});
@@ -122,39 +109,36 @@ document.getElementById("closePlayer").addEventListener("click", () => {
 
 function makeVideoCard(video) {
   const id = video.id.videoId;
-  const snippet = video.snippet;
+  const s = video.snippet;
   const card = document.createElement("article");
   card.className = "video";
 
   const img = document.createElement("img");
-  img.src = snippet.thumbnails.medium?.url ||
-            snippet.thumbnails.default?.url || "";
-  img.alt = snippet.title;
+  img.src = s.thumbnails.medium?.url || s.thumbnails.default?.url || "";
+  img.alt = s.title;
   img.loading = "lazy";
 
   const title = document.createElement("h3");
-  title.textContent = snippet.title;
+  title.textContent = s.title;
 
   const channel = document.createElement("p");
-  channel.textContent = snippet.channelTitle;
+  channel.textContent = s.channelTitle;
 
   const date = document.createElement("p");
-  date.textContent = snippet.publishedAt
-    ? new Date(snippet.publishedAt).toLocaleDateString()
-    : "";
+  date.textContent = s.publishedAt
+    ? new Date(s.publishedAt).toLocaleDateString() : "";
 
-  card.append(img, title, channel, date);
-  card.addEventListener("click", () => openVideo(id, snippet.title));
+  card.append(img,title,channel,date);
+  card.addEventListener("click", () => openVideo(id,s.title));
   return card;
 }
 
 async function searchVideos(term) {
-  const currentRequest = ++requestNumber;
+  const current = ++requestNumber;
 
   if (!YOUTUBE_API_KEY ||
       YOUTUBE_API_KEY === "PASTE_YOUR_API_KEY_HERE") {
-    statusEl.textContent =
-      "Please add your YouTube API key in the code to load videos.";
+    statusEl.textContent = "Please add your YouTube API key in the code.";
     videosEl.replaceChildren();
     return;
   }
@@ -164,12 +148,12 @@ async function searchVideos(term) {
 
   try {
     const params = new URLSearchParams({
-      part: "snippet",
-      maxResults: "24",
-      type: "video",
-      q: term,
-      safeSearch: "moderate",
-      key: YOUTUBE_API_KEY
+      part:"snippet",
+      maxResults:"24",
+      type:"video",
+      q:term,
+      safeSearch:"moderate",
+      key:YOUTUBE_API_KEY
     });
 
     const response = await fetch(
@@ -177,7 +161,7 @@ async function searchVideos(term) {
     );
     const data = await response.json();
 
-    if (currentRequest !== requestNumber) return;
+    if (current !== requestNumber) return;
     if (!response.ok) {
       throw new Error(data.error?.message || "YouTube API request failed.");
     }
@@ -193,13 +177,12 @@ async function searchVideos(term) {
         fragment.appendChild(makeVideoCard(video));
       }
     });
-
     videosEl.appendChild(fragment);
     statusEl.textContent = "Showing " + data.items.length + " videos for: " + term;
   } catch (error) {
-    if (currentRequest !== requestNumber) return;
+    if (current !== requestNumber) return;
     statusEl.textContent = "Error: " + error.message +
-      " Check your API key, API restrictions, and quota.";
+      " Check API key restrictions and quota.";
   }
 }
 
@@ -216,24 +199,10 @@ queryEl.addEventListener("keydown", event => {
 });
 
 /* Google Sign-In */
-function initializeGoogleSignIn() {
-  if (!window.google?.accounts?.id) return;
-
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: handleGoogleSignIn
-  });
-
-  google.accounts.id.renderButton(
-    document.getElementById("signin"),
-    {theme:"filled_black",size:"large",shape:"pill",text:"signin_with"}
-  );
-}
-
 function handleGoogleSignIn(response) {
   try {
     const payload = response.credential.split(".")[1];
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const base64 = payload.replace(/-/g,"+").replace(/_/g,"/");
     const decoded = decodeURIComponent(
       atob(base64).split("").map(c =>
         "%" + c.charCodeAt(0).toString(16).padStart(2,"0")
@@ -248,15 +217,22 @@ function handleGoogleSignIn(response) {
   }
 }
 
-function waitForGoogle() {
-  if (window.google?.accounts?.id) {
-    initializeGoogleSignIn();
-  } else {
-    setTimeout(waitForGoogle, 300);
+function initializeGoogleSignIn() {
+  if (!window.google?.accounts?.id) {
+    setTimeout(initializeGoogleSignIn,300);
+    return;
   }
+  google.accounts.id.initialize({
+    client_id:GOOGLE_CLIENT_ID,
+    callback:handleGoogleSignIn
+  });
+  google.accounts.id.renderButton(
+    document.getElementById("signin"),
+    {theme:"filled_black",size:"large",shape:"pill",text:"signin_with"}
+  );
 }
 
-waitForGoogle();
+initializeGoogleSignIn();
 searchVideos("popular videos");
 </script>
 </body>
