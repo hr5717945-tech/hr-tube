@@ -5,7 +5,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101010">
+<meta name="description" content="HR Tube helps you discover and watch YouTube videos.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <title>HR Tube</title>
+
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
@@ -37,6 +47,7 @@ button{padding:10px 15px;border:0;border-radius:22px;background:#ff3030;color:wh
 #player{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#000}
 .close{background:#333;margin-bottom:10px}
 footer{text-align:center;padding:25px;color:#888}
+button:focus-visible,input:focus-visible{outline:2px solid white;outline-offset:3px}
 @media(max-width:500px){
   #videos{grid-template-columns:1fr}
   .brand{font-size:24px}
@@ -56,7 +67,7 @@ footer{text-align:center;padding:25px;color:#888}
   <p id="user"></p>
 </header>
 
-<nav class="categories" id="categories"></nav>
+<nav class="categories" id="categories" aria-label="Video categories"></nav>
 
 <section class="download-box">
   <h3>Download Video</h3>
@@ -78,13 +89,16 @@ footer{text-align:center;padding:25px;color:#888}
   <h3 id="playingTitle"></h3>
 </section>
 
-<p id="status">Loading videos...</p>
+<p id="status" role="status">Loading videos...</p>
 <main id="videos"></main>
 <footer>HR Tube © 2026 — Discover videos you love.</footer>
 
 <script>
-// Add your own restricted YouTube Data API key here.
-const YOUTUBE_API_KEY = "AIzaSyDPpZTfbeB50jY6cJM2QrC-iLBdFbkG5GM";
+"use strict";
+
+// Add a restricted YouTube Data API key here.
+// Never use an unrestricted key in public website code.
+const YOUTUBE_API_KEY = "YOUR_RESTRICTED_YOUTUBE_API_KEY";
 
 const GOOGLE_CLIENT_ID =
 "855053512749-uakms5on2itlcql7ld2nvd5rlkecf2am.apps.googleusercontent.com";
@@ -128,7 +142,7 @@ categories.forEach(category => {
   categoryBar.appendChild(button);
 });
 
-// Download a direct video file when the host permits it.
+// Download direct video files only where the host permits it.
 document.getElementById("downloadBtn").addEventListener("click", () => {
   const input = document.getElementById("videoLink");
   const status = document.getElementById("downloadStatus");
@@ -153,7 +167,6 @@ document.getElementById("downloadBtn").addEventListener("click", () => {
     return;
   }
 
-  // A YouTube watch page is not a direct video-file URL.
   if (
     url.hostname === "youtube.com" ||
     url.hostname.endsWith(".youtube.com") ||
@@ -165,13 +178,12 @@ document.getElementById("downloadBtn").addEventListener("click", () => {
     return;
   }
 
-  // Let the browser or file host handle the direct link.
-  // Some hosts may open the video instead of downloading it.
   const link = document.createElement("a");
   link.href = url.href;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
   link.download = "";
+
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -251,9 +263,9 @@ async function searchVideos(term, fullVideos = false) {
   const current = ++requestNumber;
 
   if (!YOUTUBE_API_KEY ||
-      YOUTUBE_API_KEY === "PASTE_YOUR_API_KEY_HERE") {
+      YOUTUBE_API_KEY === "YOUR_RESTRICTED_YOUTUBE_API_KEY") {
     statusEl.textContent =
-      "Add your YouTube API key in the code to load videos.";
+      "Configure your restricted YouTube API key to load videos.";
     videosEl.replaceChildren();
     return;
   }
@@ -366,6 +378,14 @@ function initializeGoogleSignIn() {
 
 initializeGoogleSignIn();
 searchVideos("popular videos");
+
+/* Register the service worker for PWA support. */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(error => console.error("Service worker registration failed:", error));
+  });
+}
 </script>
 </body>
 </html>
