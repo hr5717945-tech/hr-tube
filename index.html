@@ -7,6 +7,7 @@
 <title>HR Tube</title>
 <meta name="theme-color" content="#101010">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0f0f0f;color:white;font-family:Arial,sans-serif}
@@ -18,7 +19,7 @@ h2{font-size:22px}
 input{width:100%;padding:14px;border:1px solid #444;border-radius:8px;background:#222;color:white;font-size:16px;margin:8px 0}
 button{border:0;border-radius:8px;padding:12px 18px;background:#ff3030;color:white;font-weight:bold;cursor:pointer;margin:5px 0}
 button:hover{opacity:.85}
-#player{width:100%;aspect-ratio:16/9;background:#222;border-radius:12px;margin-top:20px}
+#player{width:100%;aspect-ratio:16/9;background:#222;border-radius:12px;margin-top:20px;overflow:hidden}
 iframe{width:100%;height:100%;border:0;border-radius:12px}
 .card{background:#181818;padding:18px;border-radius:12px;margin-top:20px}
 .muted{color:#aaa;line-height:1.6}
@@ -26,6 +27,7 @@ iframe{width:100%;height:100%;border:0;border-radius:12px}
 footer{text-align:center;color:#888;padding:25px}
 </style>
 </head>
+
 <body>
 <header>
   <div class="logo">▶ <span>HR Tube</span></div>
@@ -53,7 +55,7 @@ footer{text-align:center;color:#888;padding:25px}
     <h2>Google Sign-In</h2>
     <p class="muted">Sign in using your Google account.</p>
     <div id="googleButton2"></div>
-    <p id="userInfo"></p>
+    <p id="userInfo" aria-live="polite"></p>
   </div>
 
   <div class="card">
@@ -81,11 +83,11 @@ function playVideo(){
   }else{
     try{
       const url=new URL(input);
-      if(url.hostname==="youtu.be" ||
-         url.hostname==="www.youtu.be"){
+
+      if(url.hostname==="youtu.be" || url.hostname==="www.youtu.be"){
         id=url.pathname.split("/")[1]||"";
       }else if(
-        url.hostname==="youtube.com"||
+        url.hostname==="youtube.com" ||
         url.hostname.endsWith(".youtube.com")
       ){
         if(url.pathname==="/watch"){
@@ -102,42 +104,43 @@ function playVideo(){
     return;
   }
 
-  document.getElementById("player").innerHTML=
-    '<iframe src="https://www.youtube.com/embed/'+id+
-    '" title="YouTube video player" allowfullscreen '+
-    'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>';
+  const frame=document.createElement("iframe");
+  frame.src="https://www.youtube.com/embed/"+encodeURIComponent(id);
+  frame.title="YouTube video player";
+  frame.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+  frame.allowFullscreen=true;
+
+  const player=document.getElementById("player");
+  player.replaceChildren(frame);
 }
 
 function clearVideo(){
   document.getElementById("videoInput").value="";
-  document.getElementById("player").innerHTML=
+  const player=document.getElementById("player");
+  player.innerHTML=
     '<div style="padding:25px;text-align:center;color:#aaa">Your selected video will appear here.</div>';
 }
 
 function handleGoogleResponse(response){
   try{
     const parts=response.credential.split(".");
-    const payload=JSON.parse(atob(parts[1].replace(/-/g,"+").replace(/_/g,"/")));
+    const base64=parts[1].replace(/-/g,"+").replace(/_/g,"/");
+    const payload=JSON.parse(atob(base64));
+
     document.getElementById("userInfo").textContent=
       "Signed in as "+(payload.name||payload.email||"Google user");
   }catch(e){
     document.getElementById("userInfo").textContent=
-      "Google sign-in response received.";
+      "We couldn't read the sign-in response. Please try again.";
   }
 }
 
 window.addEventListener("load",function(){
-  const clientId="PASTE_YOUR_GOOGLE_CLIENT_ID_HERE";
-
-  if(clientId==="PASTE_YOUR_GOOGLE_CLIENT_ID_HERE"){
-    document.getElementById("userInfo").textContent=
-      "Google Client ID needs to be added to activate sign-in.";
-    return;
-  }
+  const clientId="855053512749-uakms5on2itlcql7ld2nvd5rlkecf2am.apps.googleusercontent.com";
+  const info=document.getElementById("userInfo");
 
   if(!window.google||!google.accounts||!google.accounts.id){
-    document.getElementById("userInfo").textContent=
-      "Google Sign-In is loading. Refresh the page if needed.";
+    info.textContent="Google Sign-In is loading. Refresh the page if needed.";
     return;
   }
 
