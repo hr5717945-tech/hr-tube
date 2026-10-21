@@ -3,9 +3,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#101010">
-<meta name="description" content="HR Tube helps you discover and watch YouTube videos.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080812">
+<meta name="description" content="HR Tube — Discover and watch videos.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,95 +19,612 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#101010;color:#fff;font-family:Arial,sans-serif}
-header{padding:16px;background:#181818;position:sticky;top:0;z-index:5;border-bottom:1px solid #333}
-.brand{font-size:27px;font-weight:bold;color:#ff3030}
-.brand span{color:white}
-.search{display:flex;gap:8px;margin-top:15px}
-input{min-width:0;flex:1;padding:12px;border-radius:25px;border:1px solid #444;background:#252525;color:white;font-size:16px}
-button{padding:10px 15px;border:0;border-radius:22px;background:#ff3030;color:white;cursor:pointer;font-weight:bold}
-#signin{margin-top:12px}
-#user{font-size:13px;color:#bbb}
-.categories{display:flex;gap:9px;padding:14px;overflow-x:auto;white-space:nowrap}
-.categories button{background:#292929}
-.categories button.active{background:white;color:#111}
-#status{padding:0 15px;color:#bbb}
-#videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;padding:15px}
-.video{cursor:pointer;min-width:0}
-.video img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:#222}
-.video h3{font-size:15px;line-height:1.4;margin:9px 0 6px}
-.video p{font-size:13px;color:#aaa;margin:0 0 5px}
-.download-box{padding:16px;background:#181818;margin:15px;border-radius:12px;border:1px solid #333}
-.download-box h3{margin-top:0}
-.download-box input{width:100%;margin-bottom:10px}
-.download-box button{width:100%}
-#downloadStatus{font-size:13px;color:#bbb;overflow-wrap:anywhere}
-#playerWrap{display:none;padding:15px}
-#player{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#000}
-.close{background:#333;margin-bottom:10px}
-footer{text-align:center;padding:25px;color:#888}
-button:focus-visible,input:focus-visible{outline:2px solid white;outline-offset:3px}
-@media(max-width:500px){
-  #videos{grid-template-columns:1fr}
-  .brand{font-size:24px}
+:root {
+  --bg:#080812;
+  --panel:#111122;
+  --panel2:#18182b;
+  --cyan:#00f5ff;
+  --purple:#a855f7;
+  --pink:#ff2e93;
+  --text:#f7f7ff;
+  --muted:#9c9cb8;
+  --border:rgba(168,85,247,.25);
+}
+
+* { box-sizing:border-box; }
+
+html { scroll-behavior:smooth; }
+
+body {
+  margin:0;
+  padding-bottom:95px;
+  background:
+    radial-gradient(ellipse at 10% 0%,rgba(168,85,247,.14),transparent 35%),
+    radial-gradient(ellipse at 100% 25%,rgba(0,245,255,.07),transparent 30%),
+    var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  min-height:100vh;
+}
+
+button,input { font:inherit; }
+button { cursor:pointer; }
+button:focus-visible,input:focus-visible {
+  outline:2px solid var(--cyan);
+  outline-offset:3px;
+}
+
+header {
+  position:sticky;
+  top:0;
+  z-index:10;
+  padding:15px 16px;
+  background:rgba(8,8,18,.92);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+}
+
+.header-top {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+
+.brand {
+  font-size:27px;
+  font-weight:900;
+  letter-spacing:-1px;
+  color:var(--cyan);
+  text-shadow:0 0 14px rgba(0,245,255,.45);
+}
+
+.brand span { color:white; }
+.brand .play { color:var(--pink); }
+
+.tagline {
+  color:var(--muted);
+  font-size:11px;
+  margin-top:4px;
+  letter-spacing:1px;
+}
+
+#signin { margin-top:12px; }
+
+#user {
+  color:var(--cyan);
+  font-size:12px;
+  overflow-wrap:anywhere;
+}
+
+.search {
+  display:flex;
+  gap:8px;
+  margin-top:15px;
+}
+
+input {
+  min-width:0;
+  width:100%;
+  padding:13px 14px;
+  border:1px solid #33334f;
+  border-radius:14px;
+  background:#121222;
+  color:white;
+  font-size:15px;
+}
+
+input:focus {
+  border-color:var(--cyan);
+  box-shadow:0 0 14px rgba(0,245,255,.12);
+}
+
+.btn {
+  padding:12px 16px;
+  border:1px solid transparent;
+  border-radius:12px;
+  background:linear-gradient(110deg,var(--purple),#6d28d9);
+  color:white;
+  font-weight:800;
+  box-shadow:0 0 16px rgba(168,85,247,.2);
+  transition:transform .2s,filter .2s,box-shadow .2s;
+}
+
+.btn:hover {
+  transform:translateY(-2px);
+  filter:brightness(1.15);
+  box-shadow:0 0 22px rgba(168,85,247,.4);
+}
+
+.btn-cyan {
+  background:linear-gradient(110deg,#00cbd8,#0879db);
+  color:#050512;
+  box-shadow:0 0 16px rgba(0,245,255,.2);
+}
+
+.btn-pink {
+  background:linear-gradient(110deg,#ff2e93,#a21caf);
+}
+
+.btn-muted {
+  background:#222238;
+  border-color:#393951;
+  box-shadow:none;
+}
+
+.hero {
+  margin:18px 15px 10px;
+  padding:22px 19px;
+  border:1px solid rgba(0,245,255,.25);
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(0,245,255,.14),transparent 40%),
+    linear-gradient(135deg,#17132d,#101020 70%);
+  box-shadow:0 0 24px rgba(0,245,255,.06);
+  animation:rise .6s ease both;
+}
+
+.hero-label {
+  color:var(--cyan);
+  font-size:11px;
+  font-weight:bold;
+  letter-spacing:2px;
+}
+
+.hero h1 {
+  margin:12px 0 8px;
+  font-size:clamp(27px,7vw,38px);
+  line-height:1.12;
+}
+
+.hero h1 span {
+  color:var(--cyan);
+  text-shadow:0 0 16px rgba(0,245,255,.35);
+}
+
+.hero p {
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.6;
+  margin:0 0 17px;
+}
+
+.section-heading {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:18px 15px 10px;
+}
+
+.section-heading h2 {
+  font-size:17px;
+  margin:0;
+}
+
+.section-heading small {
+  color:var(--muted);
+  font-size:11px;
+}
+
+.categories {
+  display:flex;
+  gap:9px;
+  padding:10px 15px 15px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+
+.categories::-webkit-scrollbar { display:none; }
+
+.categories button {
+  flex-shrink:0;
+  padding:10px 14px;
+  border-radius:22px;
+  color:#c9c9e0;
+  background:#17172a;
+  border:1px solid #2c2c48;
+  transition:all .2s;
+}
+
+.categories button.active {
+  color:#060612;
+  background:var(--cyan);
+  border-color:var(--cyan);
+  box-shadow:0 0 16px rgba(0,245,255,.25);
+  font-weight:bold;
+}
+
+#status {
+  padding:10px 15px;
+  color:var(--muted);
+  font-size:13px;
+  overflow-wrap:anywhere;
+}
+
+#videos {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+  padding:5px 12px 20px;
+}
+
+.video {
+  min-width:0;
+  overflow:hidden;
+  cursor:pointer;
+  border:1px solid rgba(168,85,247,.18);
+  border-radius:16px;
+  background:linear-gradient(145deg,#17172b,#10101c);
+  transition:transform .22s,border-color .22s,box-shadow .22s;
+  animation:rise .4s ease both;
+}
+
+.video:hover {
+  transform:translateY(-4px);
+  border-color:rgba(0,245,255,.6);
+  box-shadow:0 0 18px rgba(0,245,255,.09);
+}
+
+.video img {
+  display:block;
+  width:100%;
+  aspect-ratio:16/9;
+  object-fit:cover;
+  background:#202035;
+}
+
+.video-info { padding:10px; }
+
+.video h3 {
+  margin:0 0 8px;
+  font-size:13px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+
+.video p {
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.4;
+  margin:4px 0 0;
+}
+
+.empty-state {
+  grid-column:1/-1;
+  padding:30px 15px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.7;
+}
+
+.panel {
+  margin:15px;
+  padding:17px;
+  border:1px solid var(--border);
+  border-radius:19px;
+  background:linear-gradient(145deg,rgba(24,24,45,.96),rgba(13,13,26,.96));
+  box-shadow:0 8px 25px rgba(0,0,0,.18);
+}
+
+.panel h2,.panel h3 { margin:0 0 10px; }
+
+.panel p {
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.6;
+}
+
+.field-label {
+  display:block;
+  margin:14px 0 7px;
+  color:#d7d7ee;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.full-width { width:100%; }
+
+#playerWrap { display:none; }
+
+.player-frame {
+  position:relative;
+  overflow:hidden;
+  width:100%;
+  aspect-ratio:16/9;
+  background:#000;
+  border:1px solid rgba(0,245,255,.35);
+  border-radius:15px;
+}
+
+#player {
+  display:block;
+  width:100%;
+  height:100%;
+  border:0;
+}
+
+#playingTitle {
+  margin:12px 0 0;
+  font-size:15px;
+  line-height:1.5;
+}
+
+#directPlayerWrap { display:none; }
+
+#directPlayer {
+  display:block;
+  width:100%;
+  max-height:60vh;
+  background:#000;
+  border-radius:13px;
+}
+
+.player-note {
+  padding:10px;
+  border-radius:10px;
+  background:#0b1720;
+  color:#b7eaf0;
+  font-size:12px;
+  line-height:1.6;
+  margin-top:12px;
+}
+
+#downloadStatus {
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+  overflow-wrap:anywhere;
+}
+
+#downloadStatus a { color:var(--cyan); }
+
+.hidden { display:none!important; }
+
+.bottom-nav {
+  position:fixed;
+  z-index:20;
+  bottom:0;
+  left:0;
+  right:0;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  padding:9px 5px calc(9px + env(safe-area-inset-bottom));
+  background:rgba(10,10,22,.96);
+  border-top:1px solid rgba(168,85,247,.3);
+  backdrop-filter:blur(18px);
+}
+
+.nav-btn {
+  border:0;
+  background:transparent;
+  color:#9696b4;
+  padding:7px 2px;
+  font-size:10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+}
+
+.nav-icon { font-size:20px; }
+
+.nav-btn.active {
+  color:var(--cyan);
+  text-shadow:0 0 12px rgba(0,245,255,.35);
+}
+
+.page-section { scroll-margin-top:155px; }
+
+footer {
+  text-align:center;
+  padding:25px 15px;
+  color:#777791;
+  font-size:12px;
+}
+
+@keyframes rise {
+  from { opacity:0; transform:translateY(10px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+@media(min-width:700px) {
+  #videos {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:18px;
+    padding:8px 20px 25px;
+  }
+
+  .hero { margin:22px 20px 12px; padding:30px; }
+  .panel { margin:18px 20px; }
+  .section-heading { padding-left:20px; padding-right:20px; }
+  .categories { padding-left:20px; }
+  #status { padding-left:20px; }
+}
+
+@media(min-width:1000px) {
+  #videos { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  header { padding-left:25px; padding-right:25px; }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    animation:none!important;
+    scroll-behavior:auto!important;
+    transition:none!important;
+  }
 }
 </style>
 </head>
 
 <body>
+
 <header>
-  <div class="brand">▶ <span>HR</span> Tube</div>
-  <div class="search">
-    <input id="query" type="search"
-      placeholder="Search YouTube videos..." aria-label="Search videos">
-    <button id="searchBtn">Search</button>
+  <div class="header-top">
+    <div>
+      <div class="brand"><span class="play">▶</span> <span>HR</span> Tube</div>
+      <div class="tagline">YOUR VIDEO UNIVERSE</div>
+    </div>
+    <button class="btn btn-muted" id="topSearchBtn" type="button">⌕ Search</button>
   </div>
+
+  <div class="search" id="searchArea">
+    <input id="query" type="search"
+      placeholder="Search YouTube videos..."
+      aria-label="Search YouTube videos">
+    <button class="btn btn-cyan" id="searchBtn" type="button">Go</button>
+  </div>
+
   <div id="signin"></div>
-  <p id="user"></p>
+  <p id="user" aria-live="polite"></p>
 </header>
 
-<nav class="categories" id="categories" aria-label="Video categories"></nav>
+<section class="hero">
+  <div class="hero-label">✦ WELCOME TO HR TUBE</div>
+  <h1>Your world.<br><span>Your videos.</span></h1>
+  <p>Discover gaming, music, entertainment and more in your own video hub.</p>
+  <button class="btn btn-cyan" id="exploreBtn" type="button">Explore Videos ↘</button>
+</section>
 
-<section class="download-box">
-  <h3>Download Video</h3>
-  <input id="videoLink" type="url"
-    placeholder="Paste a direct video URL (.mp4)"
-    aria-label="Video download link">
-  <button id="downloadBtn">Download Video</button>
-  <p id="downloadStatus">
-    Paste a direct video-file link that permits downloading.
+<section id="homeSection" class="page-section">
+  <div class="section-heading">
+    <h2>Explore Categories</h2>
+    <small>Find your vibe</small>
+  </div>
+  <nav class="categories" id="categories" aria-label="Video categories"></nav>
+
+  <div class="section-heading">
+    <h2 id="resultsHeading">Trending for You</h2>
+    <small>Powered by YouTube</small>
+  </div>
+  <p id="status" role="status" aria-live="polite">Loading videos...</p>
+  <main id="videos"></main>
+</section>
+
+<section id="playerWrap" class="panel page-section">
+  <div class="section-heading" style="padding:0 0 12px">
+    <h2>▶ YouTube Player</h2>
+    <button class="btn btn-muted" id="closePlayer" type="button">✕ Close</button>
+  </div>
+  <div class="player-frame">
+    <iframe id="player"
+      title="YouTube video player"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+  <h3 id="playingTitle"></h3>
+  <p class="player-note">
+    YouTube playback follows YouTube's rules. Playing with the screen off
+    is not guaranteed by this website.
   </p>
 </section>
 
-<section id="playerWrap">
-  <button class="close" id="closePlayer">✕ Close video</button>
-  <iframe id="player" title="YouTube video player"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen
-    referrerpolicy="strict-origin-when-cross-origin"></iframe>
-  <h3 id="playingTitle"></h3>
+<section id="directSection" class="panel page-section">
+  <h2>🎧 Direct Video Player</h2>
+  <p>Play a compatible direct media-file URL. Some sources may support background audio, depending on Android, your browser, and the source.</p>
+
+  <label class="field-label" for="directUrl">Direct media URL</label>
+  <input id="directUrl" type="url"
+    placeholder="https://example.com/video.mp4"
+    autocomplete="url">
+
+  <button class="btn btn-cyan full-width" id="playDirectBtn" type="button" style="margin-top:10px">
+    ▶ Play Direct Video
+  </button>
+
+  <div id="directPlayerWrap" style="margin-top:15px">
+    <video id="directPlayer" controls playsinline preload="metadata"></video>
+    <button class="btn btn-muted full-width" id="stopDirectBtn" type="button" style="margin-top:10px">
+      ■ Stop Playback
+    </button>
+  </div>
+
+  <p id="directStatus" role="status" aria-live="polite"></p>
+
+  <div class="player-note">
+    Use media you own or have permission to play. This player cannot guarantee
+    playback after the app is closed, and it does not bypass site restrictions.
+  </div>
 </section>
 
-<p id="status" role="status">Loading videos...</p>
-<main id="videos"></main>
-<footer>HR Tube © 2026 — Discover videos you love.</footer>
+<section id="downloadsSection" class="panel page-section">
+  <h2>⬇ Direct File Download</h2>
+  <p>Open a direct video-file link from a source that permits downloading. Some servers may play the file instead of downloading it.</p>
+
+  <label class="field-label" for="videoLink">Video file URL</label>
+  <input id="videoLink" type="url"
+    placeholder="Paste a direct video URL (.mp4)"
+    autocomplete="url">
+
+  <button class="btn btn-pink full-width" id="downloadBtn" type="button" style="margin-top:10px">
+    Download / Open File
+  </button>
+
+  <p id="downloadStatus" role="status" aria-live="polite">
+    YouTube links are not accepted as direct download links.
+  </p>
+</section>
+
+<section id="accountSection" class="panel page-section">
+  <h2>👤 Your Account</h2>
+  <p>Use Google Sign-In to display your Google profile name in HR Tube.</p>
+  <div id="accountStatus">Not signed in.</div>
+  <p>Sign-in here displays profile information. This page does not create a secure account session on a server.</p>
+</section>
+
+<footer>HR Tube © 2026 · Made for video lovers</footer>
+
+<nav class="bottom-nav" aria-label="Main navigation">
+  <button class="nav-btn active" data-target="homeSection" type="button">
+    <span class="nav-icon">⌂</span><span>Home</span>
+  </button>
+  <button class="nav-btn" data-target="directSection" type="button">
+    <span class="nav-icon">♫</span><span>Player</span>
+  </button>
+  <button class="nav-btn" data-target="downloadsSection" type="button">
+    <span class="nav-icon">⇩</span><span>Downloads</span>
+  </button>
+  <button class="nav-btn" data-target="accountSection" type="button">
+    <span class="nav-icon">◎</span><span>Account</span>
+  </button>
+</nav>
 
 <script>
 "use strict";
 
-// Add a restricted YouTube Data API key here.
-// Never use an unrestricted key in public website code.
-const YOUTUBE_API_KEY = "YOUR_RESTRICTED_YOUTUBE_API_KEY";
+/*
+  CONFIGURATION
+  Add your restricted YouTube Data API key below.
+  Restrict the key to the YouTube Data API v3 and your website where possible.
+*/
+const YOUTUBE_API_KEY = "AIzaSyDPpZTfbeB50jY6cJM2QrC-iLBdFbkG5GM";
 
 const GOOGLE_CLIENT_ID =
-"855053512749-uakms5on2itlcql7ld2nvd5rlkecf2am.apps.googleusercontent.com";
+  "855053512749-uakms5on2itlcql7ld2nvd5rlkecf2am.apps.googleusercontent.com";
 
 const categories = [
-  "For You","Music","Gaming","Sports","News","Comedy",
-  "Movies","Education","Technology","Science","Travel",
-  "Cooking","Podcasts","Full Videos"
+  "For You", "Music", "Gaming", "Sports", "News", "Comedy",
+  "Movies", "Education", "Technology", "Science", "Travel",
+  "Cooking", "Podcasts", "Full Videos"
 ];
+
+const categoryTerms = {
+  "For You":"popular videos",
+  "Music":"popular music",
+  "Gaming":"gaming",
+  "Sports":"sports",
+  "News":"news",
+  "Comedy":"comedy",
+  "Movies":"movie trailers",
+  "Education":"educational videos",
+  "Technology":"technology",
+  "Science":"science",
+  "Travel":"travel",
+  "Cooking":"cooking",
+  "Podcasts":"podcasts",
+  "Full Videos":"popular full length videos"
+};
 
 const categoryBar = document.getElementById("categories");
 const videosEl = document.getElementById("videos");
@@ -115,90 +632,73 @@ const statusEl = document.getElementById("status");
 const queryEl = document.getElementById("query");
 const playerWrap = document.getElementById("playerWrap");
 const player = document.getElementById("player");
+const resultsHeading = document.getElementById("resultsHeading");
 
 let requestNumber = 0;
+let googleInitialized = false;
+
+function setActiveCategory(button) {
+  categoryBar.querySelectorAll("button").forEach(item => {
+    item.classList.toggle("active", item === button);
+  });
+}
+
+function setActiveNavigation(targetId) {
+  document.querySelectorAll(".nav-btn").forEach(button => {
+    button.classList.toggle("active", button.dataset.target === targetId);
+  });
+}
+
+function goToSection(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+
+  setActiveNavigation(id);
+  target.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+document.querySelectorAll(".nav-btn").forEach(button => {
+  button.addEventListener("click", () => goToSection(button.dataset.target));
+});
+
+document.getElementById("topSearchBtn").addEventListener("click", () => {
+  document.getElementById("searchArea").scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+  queryEl.focus({preventScroll:true});
+});
+
+document.getElementById("exploreBtn").addEventListener("click", () => {
+  goToSection("homeSection");
+});
 
 categories.forEach(category => {
   const button = document.createElement("button");
+  button.type = "button";
   button.textContent = category;
   button.className = category === "For You" ? "active" : "";
 
   button.addEventListener("click", () => {
-    categoryBar.querySelectorAll("button").forEach(b =>
-      b.classList.toggle("active", b === button)
-    );
-
+    setActiveCategory(button);
     queryEl.value = "";
-
-    const term = category === "For You"
-      ? "popular videos"
-      : category === "Full Videos"
-        ? "popular full length videos"
-        : category;
-
+    const term = categoryTerms[category] || category;
     searchVideos(term, category === "Full Videos");
   });
 
   categoryBar.appendChild(button);
 });
 
-// Download direct video files only where the host permits it.
-document.getElementById("downloadBtn").addEventListener("click", () => {
-  const input = document.getElementById("videoLink");
-  const status = document.getElementById("downloadStatus");
-  const rawUrl = input.value.trim();
-
-  if (!rawUrl) {
-    status.textContent = "Please paste a video link first.";
-    return;
-  }
-
-  let url;
-
-  try {
-    url = new URL(rawUrl);
-  } catch {
-    status.textContent = "Please enter a valid video URL.";
-    return;
-  }
-
-  if (url.protocol !== "https:" && url.protocol !== "http:") {
-    status.textContent = "Please enter a valid HTTP or HTTPS link.";
-    return;
-  }
-
-  if (
-    url.hostname === "youtube.com" ||
-    url.hostname.endsWith(".youtube.com") ||
-    url.hostname === "youtu.be" ||
-    url.hostname.endsWith(".youtu.be")
-  ) {
-    status.textContent =
-      "YouTube links are not direct video files. Use YouTube's official download options where available.";
-    return;
-  }
-
-  const link = document.createElement("a");
-  link.href = url.href;
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
-  link.download = "";
-
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  status.textContent =
-    "Download request opened. If the video plays instead, use the file host's download option.";
-});
-
+/* YouTube embedded player */
 function openVideo(id, title) {
-  player.src = "https://www.youtube-nocookie.com/embed/" +
-    encodeURIComponent(id) + "?autoplay=1";
+  player.src =
+    "https://www.youtube-nocookie.com/embed/" +
+    encodeURIComponent(id) +
+    "?autoplay=1";
 
   document.getElementById("playingTitle").textContent = title;
   playerWrap.style.display = "block";
-  playerWrap.scrollIntoView({behavior:"smooth",block:"start"});
+  playerWrap.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
 document.getElementById("closePlayer").addEventListener("click", () => {
@@ -206,43 +706,61 @@ document.getElementById("closePlayer").addEventListener("click", () => {
   playerWrap.style.display = "none";
 });
 
+/* YouTube search results */
 function makeVideoCard(video) {
   const id = video.id.videoId;
-  const s = video.snippet;
+  const snippet = video.snippet;
+
   const card = document.createElement("article");
   card.className = "video";
+  card.tabIndex = 0;
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", "Play " + snippet.title);
 
   const img = document.createElement("img");
-  img.src = s.thumbnails.medium?.url ||
-            s.thumbnails.default?.url || "";
-  img.alt = s.title;
+  img.src = snippet.thumbnails.medium?.url ||
+            snippet.thumbnails.default?.url || "";
+  img.alt = snippet.title;
   img.loading = "lazy";
 
+  const info = document.createElement("div");
+  info.className = "video-info";
+
   const title = document.createElement("h3");
-  title.textContent = s.title;
+  title.textContent = snippet.title;
 
   const channel = document.createElement("p");
-  channel.textContent = s.channelTitle;
+  channel.textContent = snippet.channelTitle || "YouTube channel";
 
   const date = document.createElement("p");
-  date.textContent = s.publishedAt
-    ? new Date(s.publishedAt).toLocaleDateString() : "";
+  date.textContent = snippet.publishedAt
+    ? new Date(snippet.publishedAt).toLocaleDateString()
+    : "";
 
-  card.append(img, title, channel, date);
-  card.addEventListener("click", () => openVideo(id, s.title));
+  info.append(title, channel, date);
+  card.append(img, info);
+
+  const play = () => openVideo(id, snippet.title);
+  card.addEventListener("click", play);
+  card.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      play();
+    }
+  });
 
   return card;
 }
 
 async function fetchVideos(term, duration, limit) {
   const params = new URLSearchParams({
-    part: "snippet",
-    maxResults: String(limit),
-    type: "video",
-    q: term,
-    safeSearch: "moderate",
-    videoDuration: duration,
-    key: YOUTUBE_API_KEY
+    part:"snippet",
+    maxResults:String(limit),
+    type:"video",
+    q:term,
+    safeSearch:"moderate",
+    videoDuration:duration,
+    key:YOUTUBE_API_KEY
   });
 
   const response = await fetch(
@@ -252,8 +770,9 @@ async function fetchVideos(term, duration, limit) {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error?.message ||
-      "YouTube API request failed.");
+    throw new Error(
+      data.error?.message || "YouTube API request failed."
+    );
   }
 
   return data.items || [];
@@ -262,18 +781,21 @@ async function fetchVideos(term, duration, limit) {
 async function searchVideos(term, fullVideos = false) {
   const current = ++requestNumber;
 
-  if (!YOUTUBE_API_KEY ||
-      YOUTUBE_API_KEY === "YOUR_RESTRICTED_YOUTUBE_API_KEY") {
+  resultsHeading.textContent = term;
+  player.src = "";
+  playerWrap.style.display = "none";
+
+  if (
+    !YOUTUBE_API_KEY ||
+    YOUTUBE_API_KEY === "YOUR_RESTRICTED_YOUTUBE_API_KEY"
+  ) {
     statusEl.textContent =
-      "Configure your restricted YouTube API key to load videos.";
+      "Add your restricted YouTube API key in the code to load videos.";
     videosEl.replaceChildren();
     return;
   }
 
-  statusEl.textContent = fullVideos
-    ? "Loading regular videos..."
-    : "Loading videos...";
-
+  statusEl.textContent = "Searching YouTube...";
   videosEl.replaceChildren();
 
   try {
@@ -287,10 +809,9 @@ async function searchVideos(term, fullVideos = false) {
 
       if (current !== requestNumber) return;
 
-      const combined = [...results[0], ...results[1]];
       const unique = new Map();
 
-      combined.forEach(video => {
+      [...results[0], ...results[1]].forEach(video => {
         if (video.id?.videoId) {
           unique.set(video.id.videoId, video);
         }
@@ -303,89 +824,18 @@ async function searchVideos(term, fullVideos = false) {
 
     if (current !== requestNumber) return;
 
-    if (!items.length) {
+    const validItems = items.filter(video =>
+      video.id?.videoId && video.snippet?.thumbnails
+    );
+
+    if (!validItems.length) {
       statusEl.textContent = "No videos found. Try another search.";
       return;
     }
 
     const fragment = document.createDocumentFragment();
-
-    items.forEach(video => {
-      if (video.id?.videoId && video.snippet?.thumbnails) {
-        fragment.appendChild(makeVideoCard(video));
-      }
-    });
-
+    validItems.forEach(video => fragment.appendChild(makeVideoCard(video)));
     videosEl.appendChild(fragment);
+
     statusEl.textContent =
-      "Showing " + videosEl.children.length + " videos for: " + term;
-  } catch (error) {
-    if (current !== requestNumber) return;
-    statusEl.textContent = "Error: " + error.message +
-      " Check your API key restrictions and quota.";
-  }
-}
-
-document.getElementById("searchBtn").addEventListener("click", () => {
-  const term = queryEl.value.trim();
-  if (term) searchVideos(term);
-});
-
-queryEl.addEventListener("keydown", event => {
-  if (event.key === "Enter") {
-    const term = queryEl.value.trim();
-    if (term) searchVideos(term);
-  }
-});
-
-/* Google Sign-In */
-function handleGoogleSignIn(response) {
-  try {
-    const payload = response.credential.split(".")[1];
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-
-    const decoded = decodeURIComponent(
-      atob(base64).split("").map(c =>
-        "%" + c.charCodeAt(0).toString(16).padStart(2,"0")
-      ).join("")
-    );
-
-    const user = JSON.parse(decoded);
-    document.getElementById("user").textContent =
-      "Signed in as " + (user.name || user.email || "Google user");
-  } catch {
-    document.getElementById("user").textContent =
-      "Sign-in completed, but profile details could not be displayed.";
-  }
-}
-
-function initializeGoogleSignIn() {
-  if (!window.google?.accounts?.id) {
-    setTimeout(initializeGoogleSignIn, 300);
-    return;
-  }
-
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: handleGoogleSignIn
-  });
-
-  google.accounts.id.renderButton(
-    document.getElementById("signin"),
-    {theme:"filled_black",size:"large",shape:"pill",text:"signin_with"}
-  );
-}
-
-initializeGoogleSignIn();
-searchVideos("popular videos");
-
-/* Register the service worker for PWA support. */
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .catch(error => console.error("Service worker registration failed:", error));
-  });
-}
-</script>
-</body>
-</html>
+      "Fo
