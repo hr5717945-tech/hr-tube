@@ -6,7 +6,10 @@
   <meta name="theme-color" content="#080812">
   <meta name="description" content="HR Tube — Discover and watch YouTube videos.">
   <title>HR Tube</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+
   <style>
     * { box-sizing: border-box; }
     :root {
@@ -24,8 +27,8 @@
     input { width:100%; min-width:0; padding:12px 14px; color:white; background:var(--panel); border:1px solid var(--border); border-radius:12px; outline:none; }
     input:focus { border-color:var(--accent); }
     .btn { padding:11px 15px; color:white; background:linear-gradient(135deg,#9333ea,#6d28d9); border:0; border-radius:11px; font-weight:bold; }
-    .btn:active { transform:scale(.97); }
-    .sign-in { padding:9px 12px; border:1px solid var(--border); border-radius:10px; background:var(--panel); color:white; }
+    .btn:disabled { opacity:.6; cursor:wait; }
+    .sign-in { max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:9px 12px; border:1px solid var(--border); border-radius:10px; background:var(--panel); color:white; }
     main { max-width:1200px; margin:auto; padding:20px 16px 40px; }
     .hero { padding:22px 18px; margin-bottom:22px; border:1px solid #34305a; border-radius:18px; background:radial-gradient(ellipse at top right,#3b1767 0,transparent 60%),linear-gradient(135deg,#17132a,#0e1727); }
     .hero h1 { margin:0 0 8px; font-size:clamp(25px,5vw,38px); }
@@ -72,7 +75,7 @@
         <input id="searchInput" type="search" placeholder="Search YouTube videos..." aria-label="Search videos" required>
         <button class="btn" type="submit">Search</button>
       </form>
-      <button class="sign-in" id="signInButton" type="button">Sign in</button>
+      <button class="sign-in" id="signInButton" type="button">Sign in with Google</button>
     </div>
   </header>
 
@@ -81,7 +84,6 @@
       <h1>Discover something awesome ✨</h1>
       <p>Explore videos, search your interests, and watch your favorites with HR Tube.</p>
     </section>
-
     <nav class="categories" id="categories" aria-label="Video categories">
       <button class="category active" data-query="trending videos" type="button">Trending</button>
       <button class="category" data-query="gaming" type="button">Gaming</button>
@@ -93,7 +95,6 @@
       <button class="category" data-query="cooking" type="button">Cooking</button>
       <button class="category" data-query="Islamic lectures" type="button">Islamic</button>
     </nav>
-
     <section>
       <div class="section-heading"><h2 id="sectionTitle">Recommended Videos</h2></div>
       <p id="status" role="status" aria-live="polite">Loading videos...</p>
@@ -119,11 +120,17 @@
   <script>
     "use strict";
 
-    // Add your own NEW, restricted YouTube Data API v3 key here.
+    // Replace with your NEW restricted YouTube Data API v3 key.
     const YOUTUBE_API_KEY = "AIzaSyDPpZTfbeB50jY6cJM2QrC-iLBdFbkG5GM";
 
-    // Add your Google OAuth Web Client ID here (optional).
-    const GOOGLE_CLIENT_ID = "855053512749-uakms5on2itlcql7ld2nvd5rlkecf2am.apps.googleusercontent.com";
+    // Replace the placeholder values with your exact Firebase web app config.
+    // Find them in Firebase Console > Project settings > Your apps.
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7oQCY69awzq1tLgtWH5wqrr5ujYHxnL4",
+      authDomain: "hr-tube-44004.firebaseapp.com",
+      projectId: "hr-tube-44004",
+      appId: "1:118222363031:web:c14f3f1c43aaec45598cd2"
+    };
 
     const videosEl = document.getElementById("videos");
     const statusEl = document.getElementById("status");
@@ -139,14 +146,15 @@
 
     let currentQuery = "trending videos";
     let requestNumber = 0;
-    let googleButtonRendered = false;
+    let auth = null;
+    let authReady = false;
 
     function setStatus(message) {
       statusEl.textContent = message;
     }
 
     function escapeHTML(value) {
-      return String(value ?? "").replace(/[&<>"']/g, function (char) {
+      return String(value ?? "").replace(/[&<>"']/g, function(char) {
         return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char];
       });
     }
@@ -217,10 +225,10 @@
         ? "Recommended Videos" : "Results for: " + query;
 
       if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === "PASTE_YOUR_RESTRICTED_API_KEY_HERE") {
-        setStatus("Setup needed: add your YouTube Data API v3 key in the JavaScript section.");
+        setStatus("Setup needed: add your YouTube Data API v3 key.");
         videosEl.innerHTML = `<div class="empty" style="grid-column:1/-1">
           <strong>YouTube API key required</strong><br>
-          Enable YouTube Data API v3 in Google Cloud Console and add a valid, restricted key to this file.
+          Add a valid, restricted YouTube Data API v3 key to this file.
         </div>`;
         return;
       }
@@ -244,9 +252,8 @@
           const reason = data.error && data.error.errors && data.error.errors[0] && data.error.errors[0].reason;
           let message = (data.error && data.error.message) || "YouTube request failed (" + response.status + ").";
           if (response.status === 403) {
-            message = "YouTube API access denied. Check that YouTube Data API v3 is enabled, your key is valid, your website restrictions include your GitHub Pages address, and your quota remains. " + (reason ? "Reason: " + reason : "");
-          } else if (response.status === 400) {
-            message = "The API rejected the request. Check your API key and Google Cloud settings.";
+            message = "YouTube API access denied. Check your API key, API restrictions, website restrictions, and remaining quota. " +
+              (reason ? "Reason: " + reason : "");
           }
           throw new Error(message);
         }
@@ -295,57 +302,80 @@
       fetchVideos(button.dataset.query);
     });
 
-    function initializeGoogleSignIn() {
-      if (!window.google || !google.accounts || !google.accounts.id ||
-          !GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "PASTE_YOUR_GOOGLE_CLIENT_ID_HERE") return;
-
+    function initializeFirebaseAuth() {
       try {
-        google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: function (response) {
-            if (!response || !response.credential) {
-              alert("Google sign-in did not complete. Please try again.");
-              return;
-            }
-            // This is only a display greeting. A production site must verify the credential on a server.
-            try {
-              const payloadPart = response.credential.split(".")[1];
-              const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
-              const payload = JSON.parse(atob(base64));
-              signInButton.textContent = "Hi, " + (payload.given_name || "there");
-              signInButton.title = "Google sign-in received in this browser";
-            } catch (_) {
-              signInButton.textContent = "Signed in with Google";
-            }
+        const configIsIncomplete =
+          firebaseConfig.apiKey === "PASTE_FIREBASE_API_KEY_HERE" ||
+          firebaseConfig.appId === "PASTE_FIREBASE_APP_ID_HERE" ||
+          !firebaseConfig.authDomain ||
+          firebaseConfig.authDomain.includes("PASTE_");
+
+        if (configIsIncomplete) {
+          signInButton.textContent = "Sign-in setup needed";
+          signInButton.title = "Add your Firebase web app configuration first.";
+          console.warn("Add the actual Firebase web app configuration.");
+          return;
+        }
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error => {
+          console.error("Firebase persistence error:", error);
+        });
+
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        auth.onAuthStateChanged(user => {
+          authReady = true;
+          signInButton.disabled = false;
+
+          if (user) {
+            const firstName = user.displayName ? user.displayName.split(" ")[0] : "there";
+            signInButton.textContent = "Sign out (" + firstName + ")";
+            signInButton.title = user.email || "Signed in with Google";
+            signInButton.setAttribute("aria-label", "Sign out");
+          } else {
+            signInButton.textContent = "Sign in with Google";
+            signInButton.title = "";
+            signInButton.setAttribute("aria-label", "Sign in with Google");
           }
         });
 
-        google.accounts.id.renderButton(signInButton, {
-          theme:"filled_black", size:"medium", shape:"pill", text:"signin_with"
+        auth.getRedirectResult().catch(error => {
+          console.error("Google sign-in error:", error);
+          alert("Google sign-in failed: " + (error.message || "Check Firebase settings."));
         });
-        googleButtonRendered = true;
+
+        signInButton.addEventListener("click", async () => {
+          if (!authReady) {
+            alert("Authentication is loading. Please try again.");
+            return;
+          }
+
+          signInButton.disabled = true;
+          try {
+            if (auth.currentUser) {
+              await auth.signOut();
+            } else {
+              await auth.signInWithRedirect(googleProvider);
+            }
+          } catch (error) {
+            console.error("Authentication error:", error);
+            alert("Sign-in failed: " + (error.message || "Check Firebase settings."));
+            signInButton.disabled = false;
+          }
+        });
       } catch (error) {
-        console.error("Google Sign-In setup error:", error);
+        console.error("Firebase setup error:", error);
+        signInButton.textContent = "Sign-in unavailable";
       }
     }
 
-    signInButton.addEventListener("click", () => {
-      if (googleButtonRendered) return;
-      if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "PASTE_YOUR_GOOGLE_CLIENT_ID_HERE") {
-        alert("Google Sign-In setup is needed. Add your OAuth Web Client ID in the JavaScript settings.");
-        return;
-      }
-      if (window.google && google.accounts && google.accounts.id) {
-        initializeGoogleSignIn();
-      } else {
-        alert("Google Sign-In is loading. Please try again in a moment.");
-      }
-    });
-
     window.addEventListener("load", () => {
-      initializeGoogleSignIn();
+      initializeFirebaseAuth();
       fetchVideos("trending videos");
     });
   </script>
 </body>
-</html>
+                                     </html>
